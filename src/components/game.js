@@ -5,22 +5,29 @@ var config = {
     headers: { 'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`}
 }
 
-const opposites = {"n": "s", "s": "n", "e": "w", "w": "e"}
+const directions = ["n", "s", "e", "w"];
+const opposites = {"n": "s", "s": "n", "e": "w", "w": "e"};
 const initialDft = async () => {
     var prevDir = null
     var prevRoom = null
     var cooldown = null
     var startRoom = null
     // get current room info
-    await axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
-        .then(res => {
-            console.log(res)
-            startRoom = res.data
-            cooldown = res.data.cooldown
-        })
-        .catch(err => {
-            console.log('INIT REQUEST ERR', err)
-        })
+    setTimeout(() => {
+        axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
+            .then(res => {
+                console.log(res)
+                startRoom = res.data
+                cooldown = res.data.cooldown
+                console.log('DFT INIT SUCCESS')
+                console.log(startRoom, cooldown, prevDir, prevRoom)
+                return recurser(startRoom, prevDir, prevRoom, cooldown)
+            })
+            .catch(err => {
+                console.log('INIT REQUEST ERR', err)
+            })
+    }, 16000)
+    
     // recursive helper function below
     async function recurser(curRoom, prevD, prevR, cooldown){
         var inMap = null
@@ -32,7 +39,7 @@ const initialDft = async () => {
         let room = null
         await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/${curRoom.room_id}`)
             .then(res => {
-                console.log(res.data)
+                console.log('DFT GET BY ID',res.data)
                 room = res.data
                 inMap = true
             })
@@ -80,32 +87,41 @@ const initialDft = async () => {
                     })
         }
         if (curRoom.items > 0){
-            curRoom.items.forEach(item => {
-                setTimeout(() => {
-                    axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/take/', {name: item}, config)
-                        .then(res => {
-                            console.log('FROM TAKE', res)
-                        })
-                        .catch(err => {
-                            console.log('TAKE ERR', err)
-                        })
-                },1000 * cooldown)
-            })
+            
+            setTimeout(() => {
+                axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/take/', {name: curRoom.items[0]}, config)
+                    .then(res => {
+                        console.log('FROM TAKE', res)
+                    })
+                    .catch(err => {
+                        console.log('TAKE ERR', err)
+                    })
+            },1000 * cooldown)
+            
         }
-
         let unexplored = []
+        
         exits.forEach(item => {
             if (room[item] === -1){
                 unexplored.push(item)
             }
         })
+        console.log('UNEXPLORED', unexplored)
         if(unexplored.length === 0){
-            return 'DFT DONE'
+            // setTimeout(() => {
+            return initialBfs()
+            // }, cooldown * 1000)
         }
-        let nextMove = unexplored[Math.floor(Math.random() * exits.length)]
+        
+        
+        let nextMove = unexplored[Math.floor(Math.random() * unexplored.length)]
+        if (unexplored.length === 1){
+            nextMove = unexplored[0]
+        }
         let newCooldown = null
         let newRoom = null
         setTimeout(() => {
+            console.log('NEXT MOVE', nextMove)
             axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: nextMove}, config)
                 .then(res => {
                     console.log(res.data)
@@ -132,12 +148,184 @@ const initialDft = async () => {
         
         
     }
-    console.log(startRoom, cooldown, prevDir, prevRoom)
-    return recurser(startRoom, prevDir, prevRoom, cooldown)
+    // console.log(startRoom, cooldown, prevDir, prevRoom)
+    // return recurser(startRoom, prevDir, prevRoom, cooldown)
 }
 
-const intialBft = (startRoom) => {
+async function initialBfs(){
 
+    await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/`)
+            .then(res => {
+                console.log('TOTAL ROOMS DRAWN', res.data.length)
+                if(res.data.length === 500){
+                    console.log('INITIAL TRAVERSAL COMPLETE')
+                    return 'Done'
+                }
+            })
+            .catch(err => {
+                console.log('GET ROOMS ERR', err)
+            })
+    let q = []
+    let exits = null
+    let curRoom = null
+    let cooldown = null
+    setTimeout(() => {
+        axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
+            .then(res => {
+                console.log(res)
+                curRoom = res.data
+                cooldown = res.data.cooldown
+                exits = res.data.exits
+                exits.forEach(item => {
+                    q.push([item])
+                })
+                return recurseHelper()
+            })
+            .catch(err => {
+                console.log('INIT REQUEST ERR', err)
+            })
+    }, 15000)
+    
+    
+    
+    let visited = {}
+    async function recurseHelper(){
+        console.log('QUEUE', q)
+        let path = q.shift()
+        let room
+        let tempRoom = curRoom.room_id
+        console.log('PATH', path)
+        
+        let i = 0
+        while (i < path.length){
+            console.log('TEMP OUTSIDE GET BY ID', tempRoom)
+            await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/${tempRoom}`)
+                .then(async res => {
+                    if (res.data[path[i]] !== null){
+                        tempRoom = res.data[path[i]]
+                        console.log('temprm', tempRoom)
+                        
+                        await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/${tempRoom}`)
+                                .then(res => {
+                                    room = res.data
+                                    console.log('ROOM FROM NEST',room)
+                                    i++
+                                }).catch(err => {
+                                    console.log('UPDATE RM ERR', err)
+                                })
+                        
+                    } else {
+                        i++
+                    }
+                      
+                })
+                .catch(err => {
+                    console.log('SET TEMP_ROOM ERR', err)
+                })
+            
+            console.log('NEWROOM', room)   
+        }
+           
+       
+        
+        // return setTimeout(() => {
+            
+            console.log('ROOM', room)
+            if (!visited[tempRoom]){
+                visited[tempRoom] = tempRoom;
+                console.log('VISITED', visited)
+                let k = 0;
+                while(k < directions.length){
+                    if(room[directions[k]] !== null){
+                        if(room[directions[k]] === -1){
+                            console.log('###### BOYS WE FOUND IT######')
+                            
+                            // path.forEach(dir => {
+                            //     setTimeout(() => {
+                            //         axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: dir}, config)
+                            //             .then(res => {
+                            //                 console.log('BFS MOVE SUCCESS')
+                            //                 cooldown = res.data.cooldown
+                                            
+                            //             })
+                            //             .catch(err => {
+                            //                 console.log('BFS MOVE FAIL', err)
+                            //             })
+                            //     }, cooldown * 1000)
+                            // })
+                                
+                            k = directions.length
+                            console.log('PATH BEFORE MOVES', path)
+                            return travelPath(path, cooldown)
+                            // console.log('###### BOYS WE FOUND IT######')
+                            // initialDft()
+                            // return 
+                        }
+                        // setTimeout(() => {
+                            let pathCopy = [...path]
+                            pathCopy.push(directions[k])
+                            console.log('COPY', pathCopy)
+                            q.push(pathCopy)
+                            k++
+                        // }, 1000)
+                        
+                        // console.log('QUEUE', q)
+                    } else {
+                        k++
+                    }
+                    
+                }
+            }
+            return recurseHelper()
+        // }, 700)
+        
+        // setTimeout(() => {
+        //     return recurseHelper()
+        // }, 5000)
+     
+        
+    };
+    // return recurseHelper()
+       
+}
+
+function travelPath(path, cooldown){
+    let nextMove = path[0]
+    console.log('TRAVERSEPATH',path[0])
+    console.log('COOLDOWN', cooldown)
+    cooldown = 16
+    setTimeout(() => {
+        axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: nextMove}, config)
+            .then(res => {
+                console.log('BFS MOVE SUCCESS')
+                cooldown = res.data.cooldown
+                // if (res.data.items > 0){
+                //     setTimeout(() => {
+                //         axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/take/', {name: res.data.items[0]}, config)
+                //             .then(res => {
+                //                 console.log('FROM TAKE', res)
+                //             })
+                //             .catch(err => {
+                //                 console.log('TAKE ERR', err)
+                //             })
+                //     }, cooldown * 1000)
+                // }
+            })
+            .catch(err => {
+                console.log('BFS MOVE FAIL', err)
+            })
+    }, cooldown * 1000)
+    path.shift()
+    if(path.length > 0){
+        setTimeout(() => {
+            travelPath(path, cooldown)
+        }, cooldown * 1000)
+        
+    } else  {
+        return setTimeout(() => {
+            return initialDft()
+        }, 16000)
+    }
     
 }
 
