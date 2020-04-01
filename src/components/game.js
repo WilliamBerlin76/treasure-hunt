@@ -293,12 +293,12 @@ function travelPath(path, cooldown){
     let nextMove = path[0]
     console.log('TRAVERSEPATH',path[0])
     console.log('COOLDOWN', cooldown)
-    cooldown = 16
-    setTimeout(() => {
-        axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: nextMove}, config)
+    // cooldown = 16
+    let newCooldown = setTimeout(async () => {
+        await axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: nextMove}, config)
             .then(res => {
                 console.log('BFS MOVE SUCCESS')
-                cooldown = res.data.cooldown
+                return res.data.cooldown
                 // if (res.data.items > 0){
                 //     setTimeout(() => {
                 //         axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/take/', {name: res.data.items[0]}, config)
@@ -318,13 +318,13 @@ function travelPath(path, cooldown){
     path.shift()
     if(path.length > 0){
         setTimeout(() => {
-            travelPath(path, cooldown)
-        }, cooldown * 1000)
+            travelPath(path, newCooldown)
+        }, newCooldown * 1000)
         
-    } else  {
+    } else {
         return setTimeout(() => {
             return initialDft()
-        }, 16000)
+        }, newCooldown * 1000)
     }
     
 }
