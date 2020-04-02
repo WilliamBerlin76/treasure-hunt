@@ -13,20 +13,23 @@ const initialDft = async () => {
     var cooldown = null
     var startRoom = null
     // get current room info
-    setTimeout(() => {
-        axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
-            .then(res => {
-                console.log(res)
-                startRoom = res.data
-                cooldown = res.data.cooldown
-                console.log('DFT INIT SUCCESS')
-                console.log(startRoom, cooldown, prevDir, prevRoom)
-                return recurser(startRoom, prevDir, prevRoom, cooldown)
-            })
-            .catch(err => {
-                console.log('INIT REQUEST ERR', err)
-            })
-    }, 16000)
+    // setTimeout(() => {
+    axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
+        .then(res => {
+            console.log(res)
+            startRoom = res.data
+            cooldown = res.data.cooldown
+            console.log('DFT INIT SUCCESS')
+            console.log(startRoom, cooldown, prevDir, prevRoom)
+            return recurser(startRoom, prevDir, prevRoom, cooldown)
+        })
+        .catch(err => {
+            console.log('INIT REQUEST ERR', err)
+            return setTimeout(() => {
+                return initialDft()
+            }, 15000)
+        })
+    // }, 16000)
     
     // recursive helper function below
     async function recurser(curRoom, prevD, prevR, cooldown){
@@ -115,9 +118,6 @@ const initialDft = async () => {
         
         
         let nextMove = unexplored[Math.floor(Math.random() * unexplored.length)]
-        if (unexplored.length === 1){
-            nextMove = unexplored[0]
-        }
         let newCooldown = null
         let newRoom = null
         setTimeout(() => {
@@ -203,12 +203,12 @@ async function initialBfs(){
                 .then(async res => {
                     if (res.data[path[i]] !== null){
                         tempRoom = res.data[path[i]]
-                        console.log('temprm', tempRoom)
+                        // console.log('temprm', tempRoom)
                         
                         await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/${tempRoom}`)
                                 .then(res => {
                                     room = res.data
-                                    console.log('ROOM FROM NEST',room)
+                                    // console.log('ROOM FROM NEST',room)
                                     i++
                                 }).catch(err => {
                                     console.log('UPDATE RM ERR', err)
@@ -289,43 +289,61 @@ async function initialBfs(){
        
 }
 
-function travelPath(path, cooldown){
+async function travelPath(path, cooldown){
     let nextMove = path[0]
     console.log('TRAVERSEPATH',path[0])
     console.log('COOLDOWN', cooldown)
-    // cooldown = 16
-    let newCooldown = setTimeout(async () => {
-        await axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: nextMove}, config)
-            .then(res => {
-                console.log('BFS MOVE SUCCESS')
-                return res.data.cooldown
-                // if (res.data.items > 0){
-                //     setTimeout(() => {
-                //         axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/take/', {name: res.data.items[0]}, config)
-                //             .then(res => {
-                //                 console.log('FROM TAKE', res)
-                //             })
-                //             .catch(err => {
-                //                 console.log('TAKE ERR', err)
-                //             })
-                //     }, cooldown * 1000)
-                // }
-            })
-            .catch(err => {
-                console.log('BFS MOVE FAIL', err)
-            })
-    }, cooldown * 1000)
-    path.shift()
-    if(path.length > 0){
-        setTimeout(() => {
-            travelPath(path, newCooldown)
-        }, newCooldown * 1000)
-        
-    } else {
-        return setTimeout(() => {
-            return initialDft()
-        }, newCooldown * 1000)
+    if (cooldown > 30){
+        cooldown = 15
     }
+    // cooldown = 16
+    let newCooldown
+    function x(){
+        const setCooldown = new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                await axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: nextMove}, config)
+                    .then(res => {
+                        console.log('BFS MOVE SUCCESS')
+                        console.log('COOLDOWN FROM MOVE', res.data.cooldown)
+                        newCooldown = res.data.cooldown;
+                        if (res.data.items > 0){
+                            setTimeout(() => {
+                                axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/take/', {name: res.data.items[0]}, config)
+                                    .then(res => {
+                                        console.log('FROM TAKE', res)
+                                    })
+                                    .catch(err => {
+                                        console.log('TAKE ERR', err)
+                                    })
+                            }, newCooldown * 1000)
+                        }
+                        resolve('done')
+                        return newCooldown
+                    })
+                    .catch(err => {
+                        console.log('BFS MOVE FAIL', err)
+                        return initialDft()
+                    })
+            }, cooldown * 1000)
+        })
+        return setCooldown
+    }
+    
+    x().then(() => {
+        console.log('COOLDOWN AFTER MOVE', newCooldown)
+        path.shift()
+        if(path.length > 0){
+            // setTimeout(() => {
+                travelPath(path, newCooldown)
+            // }, newCooldown * 1000)
+            
+        } else {
+            return setTimeout(() => {
+                return initialDft()
+            }, newCooldown * 1000)
+    }
+    })
+    
     
 }
 
