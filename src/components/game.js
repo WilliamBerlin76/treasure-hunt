@@ -5,6 +5,7 @@ var config = {
     headers: { 'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`}
 }
 
+let liteMap = {};
 const directions = ["n", "s", "e", "w"];
 const opposites = {"n": "s", "s": "n", "e": "w", "w": "e"};
 const initialDft = async () => {
@@ -155,8 +156,14 @@ async function initialBfs(cooldown){
     await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/`)
             .then(res => {
                 console.log('TOTAL ROOMS DRAWN', res.data.length)
+                res.data.forEach(room => {
+                    
+                    liteMap[room.room_id] = {"n": room.n, "s": room.s, "e": room.e, "w": room.w, "x_coord": room.x_coord, "y_coord": room.y_coord}
+                   
+                })
+                console.log('LITE MAP', liteMap)
                 if(res.data.length === 500){
-                    console.log('INITIAL TRAVERSAL COMPLETE')
+                    console.log('INITIAL TRAVERSAL COMPLETE!!!')
                     return 'Done'
                 }
             })
@@ -164,99 +171,59 @@ async function initialBfs(cooldown){
                 console.log('GET ROOMS ERR', err)
             })
     let q = []
-    let exits = null
     let curRoom = null
-    // let cooldown = null
-    setTimeout(() => {
-        axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
-            .then(res => {
-                console.log(res)
-                curRoom = res.data
-                cooldown = res.data.cooldown
-                exits = res.data.exits
-                exits.forEach(item => {
-                    q.push([item])
-                })
-                return recurseHelper()
-            })
-            .catch(err => {
-                console.log('INIT REQUEST ERR', err)
-            })
-    }, cooldown * 1000)
     
+    function y(){
+        const p = new Promise((resolve, reject) => {
+            setTimeout(async () => {
+                await axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
+                    .then(res => {
+                        console.log(res)
+                        curRoom = res.data
+                        cooldown = res.data.cooldown
+                        let exits = res.data.exits
+                        exits.forEach(item => {
+                            q.push([item])
+                        })
+                        resolve('Done')
+                    })
+                    .catch(err => {
+                        console.log('INIT REQUEST ERR', err)
+                    })
+            }, cooldown * 1000)
+        });
+        return p
+    }
     
     
     let visited = {}
-    async function recurseHelper(){
-        console.log('QUEUE', q)
-        let path = q.shift()
-        let room
-        let tempRoom = curRoom.room_id
-        // console.log('PATH', path)
-        
-        let i = 0
-        while (i < path.length){
-            console.log('TEMP OUTSIDE GET BY ID', tempRoom)
-            await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/${tempRoom}`)
-                .then(async res => {
-                    if (res.data[path[i]] !== null){
-                        tempRoom = res.data[path[i]]
-                        // console.log('temprm', tempRoom)
-                        
-                        await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/${tempRoom}`)
-                                .then(res => {
-                                    room = res.data
-                                    // console.log('ROOM FROM NEST',room)
-                                    i++
-                                }).catch(err => {
-                                    console.log('UPDATE RM ERR', err)
-                                })
-                        
-                    } else {
-                        i++
+    y().then(() => {
+        while(q.length > 0){
+            let path = q.shift()
+            let tempRoom = curRoom.room_id
+
+            path.forEach(dir => {
+                tempRoom = liteMap[tempRoom][dir]
+            });
+
+            if (!visited[tempRoom]){
+                visited[tempRoom] = tempRoom;
+
+                directions.forEach(dir => {
+                    if (liteMap[tempRoom][dir] !== null) {
+                        if (liteMap[tempRoom][dir] === -1){
+                            console.log("FOUND THE ROOM")
+                            return travelPath(path, cooldown)
+                        }
+                        let pathCopy = [...path]
+                        pathCopy.push(dir)
+                        q.push(pathCopy)
                     }
-                      
                 })
-                .catch(err => {
-                    console.log('SET TEMP_ROOM ERR', err)
-                })
-            
-            // console.log('NEWROOM', room)   
-        }
-           
-       
-        // console.log('ROOM', room)
-        if (!visited[tempRoom]){
-            visited[tempRoom] = tempRoom;
-            console.log('VISITED', visited)
-            let k = 0;
-            while(k < directions.length){
-                if(room[directions[k]] !== null){
-                    if(room[directions[k]] === -1){
-                        console.log('###### BOYS WE FOUND IT######')
-                            
-                        k = directions.length
-                        console.log('PATH BEFORE MOVES', path)
-                        return travelPath(path, cooldown)
-                        
-                    }
-                    
-                    let pathCopy = [...path]
-                    pathCopy.push(directions[k])
-                    console.log('COPY', pathCopy)
-                    q.push(pathCopy)
-                    k++
-                
-                    
-                } else {
-                    k++
-                }
-                
             }
         }
-        return recurseHelper() 
-    };
-       
+    })
+    
 }
 
 async function travelPath(path, cooldown){
