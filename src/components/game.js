@@ -112,7 +112,7 @@ const initialDft = async () => {
         console.log('UNEXPLORED', unexplored)
         if(unexplored.length === 0){
             // setTimeout(() => {
-            return initialBfs()
+            return initialBfs(cooldown)
             // }, cooldown * 1000)
         }
         
@@ -148,11 +148,9 @@ const initialDft = async () => {
         
         
     }
-    // console.log(startRoom, cooldown, prevDir, prevRoom)
-    // return recurser(startRoom, prevDir, prevRoom, cooldown)
 }
 
-async function initialBfs(){
+async function initialBfs(cooldown){
 
     await axios.get(`https://lambda-treasure-be.herokuapp.com/api/world/rooms/`)
             .then(res => {
@@ -168,7 +166,7 @@ async function initialBfs(){
     let q = []
     let exits = null
     let curRoom = null
-    let cooldown = null
+    // let cooldown = null
     setTimeout(() => {
         axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
             .then(res => {
@@ -184,7 +182,7 @@ async function initialBfs(){
             .catch(err => {
                 console.log('INIT REQUEST ERR', err)
             })
-    }, 15000)
+    }, cooldown * 1000)
     
     
     
@@ -194,7 +192,7 @@ async function initialBfs(){
         let path = q.shift()
         let room
         let tempRoom = curRoom.room_id
-        console.log('PATH', path)
+        // console.log('PATH', path)
         
         let i = 0
         while (i < path.length){
@@ -223,69 +221,41 @@ async function initialBfs(){
                     console.log('SET TEMP_ROOM ERR', err)
                 })
             
-            console.log('NEWROOM', room)   
+            // console.log('NEWROOM', room)   
         }
            
        
-        
-        // return setTimeout(() => {
-            
-            console.log('ROOM', room)
-            if (!visited[tempRoom]){
-                visited[tempRoom] = tempRoom;
-                console.log('VISITED', visited)
-                let k = 0;
-                while(k < directions.length){
-                    if(room[directions[k]] !== null){
-                        if(room[directions[k]] === -1){
-                            console.log('###### BOYS WE FOUND IT######')
+        // console.log('ROOM', room)
+        if (!visited[tempRoom]){
+            visited[tempRoom] = tempRoom;
+            console.log('VISITED', visited)
+            let k = 0;
+            while(k < directions.length){
+                if(room[directions[k]] !== null){
+                    if(room[directions[k]] === -1){
+                        console.log('###### BOYS WE FOUND IT######')
                             
-                            // path.forEach(dir => {
-                            //     setTimeout(() => {
-                            //         axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/move', {direction: dir}, config)
-                            //             .then(res => {
-                            //                 console.log('BFS MOVE SUCCESS')
-                            //                 cooldown = res.data.cooldown
-                                            
-                            //             })
-                            //             .catch(err => {
-                            //                 console.log('BFS MOVE FAIL', err)
-                            //             })
-                            //     }, cooldown * 1000)
-                            // })
-                                
-                            k = directions.length
-                            console.log('PATH BEFORE MOVES', path)
-                            return travelPath(path, cooldown)
-                            // console.log('###### BOYS WE FOUND IT######')
-                            // initialDft()
-                            // return 
-                        }
-                        // setTimeout(() => {
-                            let pathCopy = [...path]
-                            pathCopy.push(directions[k])
-                            console.log('COPY', pathCopy)
-                            q.push(pathCopy)
-                            k++
-                        // }, 1000)
+                        k = directions.length
+                        console.log('PATH BEFORE MOVES', path)
+                        return travelPath(path, cooldown)
                         
-                        // console.log('QUEUE', q)
-                    } else {
-                        k++
                     }
                     
+                    let pathCopy = [...path]
+                    pathCopy.push(directions[k])
+                    console.log('COPY', pathCopy)
+                    q.push(pathCopy)
+                    k++
+                
+                    
+                } else {
+                    k++
                 }
+                
             }
-            return recurseHelper()
-        // }, 700)
-        
-        // setTimeout(() => {
-        //     return recurseHelper()
-        // }, 5000)
-     
-        
+        }
+        return recurseHelper() 
     };
-    // return recurseHelper()
        
 }
 
@@ -296,7 +266,6 @@ async function travelPath(path, cooldown){
     if (cooldown > 30){
         cooldown = 15
     }
-    // cooldown = 16
     let newCooldown
     function x(){
         const setCooldown = new Promise((resolve, reject) => {
@@ -333,9 +302,8 @@ async function travelPath(path, cooldown){
         console.log('COOLDOWN AFTER MOVE', newCooldown)
         path.shift()
         if(path.length > 0){
-            // setTimeout(() => {
-                travelPath(path, newCooldown)
-            // }, newCooldown * 1000)
+            
+            travelPath(path, newCooldown)
             
         } else {
             return setTimeout(() => {
@@ -343,8 +311,6 @@ async function travelPath(path, cooldown){
             }, newCooldown * 1000)
     }
     })
-    
-    
 }
 
 const Game = () => {
