@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import Map from './Map'
 
 var config = {
     headers: { 'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`}
@@ -283,7 +284,12 @@ async function travelPath(path, cooldown){
 const Game = () => {
 
     return (
-        <button onClick={() => initialDft()}>Build Map</button>
+        <>
+            <button onClick={() => initialDft()}>Build Map</button>
+            <Map />
+        </>
+        
+
     )
 }
 
