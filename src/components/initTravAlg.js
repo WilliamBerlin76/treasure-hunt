@@ -27,7 +27,7 @@ const initialDft = async () => {
             console.log('INIT REQUEST ERR', err)
             return setTimeout(() => {
                 return initialDft()
-            }, 15000)
+            }, 55000)
         })
     
     // recursive helper function below
@@ -297,7 +297,6 @@ const TravAlg = () => {
             <button onClick={() => initialDft()}>Build Map</button>
         </>
         
-
     )
 }
 

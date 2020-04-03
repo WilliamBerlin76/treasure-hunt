@@ -5,10 +5,6 @@ import doggo from "../images/BlitzCrop.png"
 import tiles from "../utils/tiles";
 import axios from "axios";
 
-let config = {
-    headers: { 'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`}
-}
-
 const MapCanvas = props => {
     const canvas = useRef(null);
     const canvas2 = useRef(null);
@@ -18,20 +14,8 @@ const MapCanvas = props => {
     const [tileSize, setTileSize] = useState(65)
     const [width, setWidth] = useState(24)
     const [height, setHeight] = useState(29)
-    const [position, setPosition] = useState({})
-    
-    useEffect(() => {
-
-        axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
-        .then(res => {
-            let curRoom = res.data.room_id;
-            
-            setPosition({x: mapRooms[curRoom].x_coord, y: mapRooms[curRoom].y_coord})
-            
-        })
-        
-    }, [])
-    console.log("position", position)
+   
+    // console.log("position", position)
     // useEffect(() => {
     //     let lowX = Infinity;
     //     let highX = 0;
@@ -60,6 +44,8 @@ const MapCanvas = props => {
     useEffect(() => {
         const ctx = canvas.current.getContext("2d")
         const imctx = image.current;
+        const sprctx = spriteIm.current;
+        const ctx2 = canvas2.current.getContext('2d')
 
         imctx.onload = () => {
             let tile;
@@ -107,33 +93,43 @@ const MapCanvas = props => {
                     tileSize
                 )
             
-            }
-            
+            }   
         }
-    }, []);
+        sprctx.onload = () => {
+            ctx2.drawImage(
+                sprctx,
+                0,
+                0,
+                tileSize,
+                tileSize,
+                (props.position['x'] - 49.86) * tileSize,
+                (74.08 - props.position['y']) * tileSize,
+                tileSize,
+                tileSize
+            )
+        } 
+    });
 
     useEffect(() => {
         const sprctx = spriteIm.current;
         const ctx2 = canvas2.current.getContext('2d')
-
-        ctx2.clearRect(0,0, ctx2.canvas, ctx2.canvas.height)
-
+        
+        ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height)
         ctx2.drawImage(
             sprctx,
             0,
             0,
             tileSize,
             tileSize,
-            (position['x'] - 49.86) * tileSize,
-            (74.08 - position['y']) * tileSize,
+            (props.position['x'] - 49.86) * tileSize,
+            (74.08 - props.position['y']) * tileSize,
             tileSize,
             tileSize
         )
-    }, [position])
+    }, [props.position, tileSize])
 
     return(
         <>
-            <h2>Map here</h2>
             <canvas 
                 ref={canvas}
                 width={width * tileSize}
@@ -157,7 +153,7 @@ const MapCanvas = props => {
             <img 
                 ref={spriteIm}
                 src={doggo}
-
+                alt='Player'
             />
         </>
         
