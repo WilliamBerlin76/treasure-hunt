@@ -26,12 +26,7 @@ const MapCanvas = props => {
         .then(res => {
             let curRoom = res.data.room_id;
             
-            mapRooms.forEach(room => {
-                if(room.room_id === curRoom){
-                    setPosition({x: room.x_coord, y: room.y_coord})
-                }
-            })
-            // console.log(curRoom)
+            setPosition({x: mapRooms[curRoom].x_coord, y: mapRooms[curRoom].y_coord})
             
         })
         
@@ -68,36 +63,36 @@ const MapCanvas = props => {
 
         imctx.onload = () => {
             let tile;
-            mapRooms.forEach(room => {
-                if(typeof(room.n) === 'object' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
+            for (let i = 0; i < 500; i ++){
+                if(typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 1
-                } else if (typeof(room.n) === 'number' && typeof(room.s) === 'object' && typeof(room.e) === 'object' && typeof(room.w) === 'object'){
+                } else if (typeof(mapRooms[i]['n']) === 'number' && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 2
-                } else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'object'){
+                } else if (typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'number' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 3
-                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'object' && typeof(room.e) === 'object' && typeof(room.w) === 'number'){
+                }else if (typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'number'){
                     tile = 4
-                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'object'){
+                }else if (typeof(mapRooms[i]['n']) === 'number' && typeof(mapRooms[i]['s']) === 'number' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 5
-                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'number'){
+                }else if (typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'number'){
                     tile = 6
-                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'number'){
+                }else if (typeof(mapRooms[i]['n']) === 'number' && typeof(mapRooms[i]['s']) === 'number' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'number'){
                     tile = 7
-                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'number' && typeof(room.w) === 'number'){
+                }else if (typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'number' && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'number'){
                     tile = 8
-                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'number' ){
+                }else if (typeof(mapRooms[i]['n']) === 'number' && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'number' ){
                     tile = 9
-                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'number'  && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
+                }else if (typeof(mapRooms[i]['n']) === 'number' && typeof(mapRooms[i]['s']) === 'number'  && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 10
-                }else if (typeof(room.n) === 'number'  && typeof(room.s) === 'number'  && typeof(room.e) === 'number' && typeof(room.w) === 'number' ){
+                }else if (typeof(mapRooms[i]['n']) === 'number'  && typeof(mapRooms[i]['s']) === 'number'  && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'number' ){
                     tile = 11
-                }else if (typeof(room.n) === 'number'  && typeof(room.s) === 'object' && typeof(room.e) === 'object' && typeof(room.w) === 'number' ){
+                }else if (typeof(mapRooms[i]['n']) === 'number'  && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'number' ){
                     tile = 12
-                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'number' ){
+                }else if (typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'number' && typeof(mapRooms[i]['e']) === 'object' && typeof(mapRooms[i]['w']) === 'number' ){
                     tile = 13
-                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
+                }else if (typeof(mapRooms[i]['n']) === 'object' && typeof(mapRooms[i]['s']) === 'number' && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 14
-                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
+                }else if (typeof(mapRooms[i]['n']) === 'number' && typeof(mapRooms[i]['s']) === 'object' && typeof(mapRooms[i]['e']) === 'number' && typeof(mapRooms[i]['w']) === 'object'){
                     tile = 15
                 }
                 ctx.drawImage(
@@ -106,12 +101,13 @@ const MapCanvas = props => {
                     tiles[tile].y,
                     tileSize,
                     tileSize,
-                    (room.x_coord - 50) * tileSize,
-                    (74 - room.y_coord) * tileSize,
+                    (mapRooms[i].x_coord - 50) * tileSize,
+                    (74 - mapRooms[i].y_coord) * tileSize,
                     tileSize,
                     tileSize
                 )
-            });
+            
+            }
             
         }
     }, []);
