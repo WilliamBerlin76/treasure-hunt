@@ -1,41 +1,66 @@
 import React, {useState, useRef, useEffect} from "react";
 import mapRooms from '../utils/mapRooms';
 import atlasImage from "../images/MapTiles.png";
+import doggo from "../images/BlitzCrop.png"
 import tiles from "../utils/tiles";
-import axios from "axios"
+import axios from "axios";
+
+let config = {
+    headers: { 'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`}
+}
 
 const MapCanvas = props => {
     const canvas = useRef(null);
+    const canvas2 = useRef(null);
     const image = useRef(null);
+    const spriteIm = useRef(null);
 
     const [tileSize, setTileSize] = useState(65)
     const [width, setWidth] = useState(24)
     const [height, setHeight] = useState(29)
-
+    const [position, setPosition] = useState({})
+    
     useEffect(() => {
-        let lowX = Infinity;
-        let highX = 0;
-        let lowY = Infinity;
-        let highY = 0
-        mapRooms.forEach(room => {
-            if (room.x_coord < lowX){
-                lowX = room.x_coord
-            }
-            if(room.x_coord > highX){
-                highX = room.x_coord
-            }
-            if (room.y_coord < lowY){
-                lowY = room.y_coord
-            }
-            if(room.y_coord > highY){
-                highY = room.y_coord
-            }  
+
+        axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
+        .then(res => {
+            let curRoom = res.data.room_id;
+            
+            mapRooms.forEach(room => {
+                if(room.room_id === curRoom){
+                    setPosition({x: room.x_coord, y: room.y_coord})
+                }
+            })
+            // console.log(curRoom)
+            
         })
-        let width = highX - lowX
-        let height = highY - lowY
-        console.log(width, height)
-        console.log(lowX, lowY, highX, highY)
+        
     }, [])
+    console.log("position", position)
+    // useEffect(() => {
+    //     let lowX = Infinity;
+    //     let highX = 0;
+    //     let lowY = Infinity;
+    //     let highY = 0
+    //     mapRooms.forEach(room => {
+    //         if (room.x_coord < lowX){
+    //             lowX = room.x_coord
+    //         }
+    //         if(room.x_coord > highX){
+    //             highX = room.x_coord
+    //         }
+    //         if (room.y_coord < lowY){
+    //             lowY = room.y_coord
+    //         }
+    //         if(room.y_coord > highY){
+    //             highY = room.y_coord
+    //         }  
+    //     })
+    //     let width = highX - lowX
+    //     let height = highY - lowY
+    //     console.log(width, height)
+    //     console.log(lowX, lowY, highX, highY)
+    // }, [])
 
     useEffect(() => {
         const ctx = canvas.current.getContext("2d")
@@ -44,35 +69,35 @@ const MapCanvas = props => {
         imctx.onload = () => {
             let tile;
             mapRooms.forEach(room => {
-                if(room.n === undefined && room.s === undefined && room.e >= 0 && room.w === undefined){
+                if(typeof(room.n) === 'object' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
                     tile = 1
-                } else if (room.n >= 0 && room.s === undefined && room.e === undefined && room.w === undefined){
+                } else if (typeof(room.n) === 'number' && typeof(room.s) === 'object' && typeof(room.e) === 'object' && typeof(room.w) === 'object'){
                     tile = 2
-                } else if (room.n === undefined && room.s >= 0 && room.e === undefined && room.w === undefined){
+                } else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'object'){
                     tile = 3
-                }else if (room.n === undefined && room.s === undefined && room.e === undefined && room.w >= 0){
+                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'object' && typeof(room.e) === 'object' && typeof(room.w) === 'number'){
                     tile = 4
-                }else if (room.n >= 0 && room.s >= 0 && room.e === undefined && room.w === undefined){
+                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'object'){
                     tile = 5
-                }else if (room.n === undefined && room.s === undefined && room.e >= 0 && room.w >= 0){
+                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'number'){
                     tile = 6
-                }else if (room.n >= 0 && room.s >= 0 && room.e === undefined && room.w >= 0){
+                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'number'){
                     tile = 7
-                }else if (room.n === undefined && room.s >= 0 && room.e >= 0 && room.w >= 0){
+                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'number' && typeof(room.w) === 'number'){
                     tile = 8
-                }else if (room.n >= 0 && room.s === undefined && room.e >= 0 && room.w >= 0 ){
+                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'number' ){
                     tile = 9
-                }else if (room.n >= 0 && room.s >= 0  && room.e >= 0 && room.w === undefined){
+                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'number'  && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
                     tile = 10
-                }else if (room.n >= 0  && room.s >= 0  && room.e >= 0 && room.w >= 0 ){
+                }else if (typeof(room.n) === 'number'  && typeof(room.s) === 'number'  && typeof(room.e) === 'number' && typeof(room.w) === 'number' ){
                     tile = 11
-                }else if (room.n >= 0  && room.s === undefined && room.e === undefined && room.w >= 0 ){
+                }else if (typeof(room.n) === 'number'  && typeof(room.s) === 'object' && typeof(room.e) === 'object' && typeof(room.w) === 'number' ){
                     tile = 12
-                }else if (room.n === undefined && room.s >= 0 && room.e === undefined && room.w >= 0 ){
+                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'object' && typeof(room.w) === 'number' ){
                     tile = 13
-                }else if (room.n === undefined && room.s >= 0 && room.e >= 0 && room.w === undefined){
+                }else if (typeof(room.n) === 'object' && typeof(room.s) === 'number' && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
                     tile = 14
-                }else if (room.n >= 0 && room.s === undefined && room.e >= 0 && room.w === undefined){
+                }else if (typeof(room.n) === 'number' && typeof(room.s) === 'object' && typeof(room.e) === 'number' && typeof(room.w) === 'object'){
                     tile = 15
                 }
                 ctx.drawImage(
@@ -89,7 +114,27 @@ const MapCanvas = props => {
             });
             
         }
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        const sprctx = spriteIm.current;
+        const ctx2 = canvas2.current.getContext('2d')
+
+        ctx2.clearRect(0,0, ctx2.canvas, ctx2.canvas.height)
+
+        ctx2.drawImage(
+            sprctx,
+            0,
+            0,
+            tileSize,
+            tileSize,
+            (position['x'] - 49.86) * tileSize,
+            (74.08 - position['y']) * tileSize,
+            tileSize,
+            tileSize
+        )
+    }, [position])
+
     return(
         <>
             <h2>Map here</h2>
@@ -97,6 +142,13 @@ const MapCanvas = props => {
                 ref={canvas}
                 width={width * tileSize}
                 height={height * tileSize}
+                
+            />
+            <canvas 
+                ref={canvas2}
+                width={width * tileSize}
+                height={height * tileSize}
+                style={ {position: 'absolute', left: '0'} }
             />
             <img
                 ref={image}
@@ -105,6 +157,11 @@ const MapCanvas = props => {
                 height={65}
                 style={ {visibility: "hidden"} }
                 alt='Tiles'
+            />
+            <img 
+                ref={spriteIm}
+                src={doggo}
+
             />
         </>
         

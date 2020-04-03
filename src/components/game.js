@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 import Map from './Map'
 
-var config = {
+let config = {
     headers: { 'Authorization': `Token ${process.env.REACT_APP_API_TOKEN}`}
 }
 
