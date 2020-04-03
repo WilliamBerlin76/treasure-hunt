@@ -153,6 +153,7 @@ const MapCanvas = props => {
             <img 
                 ref={spriteIm}
                 src={doggo}
+                style={ {visibility: "hidden"} }
                 alt='Player'
             />
         </>

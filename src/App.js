@@ -1,11 +1,14 @@
 import React from 'react';
 import Game from './components/game'
-import './App.css';
+import './App.scss';
 
 function App() {
   return (
     <>
-      <h1>Treasure Hunt</h1>
+      <div className='title'>
+        <h1>Treasure Hunt</h1>
+        <p>(yes... that's my dog)</p>
+      </div>
       <Game/>
     </>
   );
