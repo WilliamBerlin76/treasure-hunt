@@ -122,7 +122,7 @@ const Game = () => {
     }
     return (
         <>
-            <TravAlg />
+            {/* <TravAlg /> */}
             <Map 
                 position={position}
             />
