@@ -7997,7 +7997,7 @@ export default {
       "x_coord": 51,
       "y_coord": 67,
       "name_changer": null,
-      "shrine": null,
+      "shrine": 1,
       "shop": null
     }
   }
