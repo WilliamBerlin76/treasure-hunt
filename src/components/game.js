@@ -21,6 +21,8 @@ const Game = () => {
     const [dropItem, setDropItem] = useState({});
     const [inventory, setInventory] = useState({});
     const [sellItem, setSellItem] = useState({});
+    const [nameChange, setNameChange] = useState({});
+    const buyDonut = {"name": "donut", "confirm": "yes"}
 
     useEffect(() => {
         axios.get(`https://lambda-treasure-hunt.herokuapp.com/api/adv/init`, config)
@@ -71,23 +73,26 @@ const Game = () => {
         setTakeItem({
             "name": e.target.value
         })
-        console.log(takeItem)
     }
 
     const handleDropChange = e => {
         setDropItem({
             "name": e.target.value
         })
-        console.log(dropItem)
     }
     const handleSellChange = e => {
         setSellItem({
             "name": e.target.value,
             confirm: "yes"
         })
-        console.log(sellItem)
-    }
+    };
 
+    const handleNameChange = e => {
+        setNameChange({
+            "name": e.target.value,
+            "confirm": "aye"
+        })
+    }
     const submitTakeDrop = (action) => {
         let item
         if (action === 'take'){
@@ -96,9 +101,12 @@ const Game = () => {
             item = dropItem
         } else if (action === 'sell'){
             item = sellItem
+        } else if (action === 'buy'){
+            item = buyDonut
+        } else if (action === 'change_name'){
+            item = nameChange
         }
-        console.log(action)
-        console.log(item)
+        
         axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}`, item, config)
             .then(res => {
                 setCooldown(res.data.cooldown)
@@ -107,7 +115,7 @@ const Game = () => {
                     inventory.push(item['name'])
                 } else if (action === 'drop' || action === 'sell'){
                     for (let i = 0; i < inventory.length; i++){
-                        if (inventory[i] === dropItem['name']){
+                        if (inventory[i] === item['name']){
                             inventory.splice(i, 1)
                             break
                         }
@@ -118,7 +126,6 @@ const Game = () => {
                 console.log('TAKE/DROP ITEM ERR', err)
             })
     };
-
     const handleMove = (dir) => {
         let nextRoom = mapRooms[roomInfo.room_id][dir]
         console.log(nextRoom)
@@ -155,20 +162,36 @@ const Game = () => {
             }
             if (!visited[tempRoom]){
                 visited[tempRoom] = tempRoom;
-
-                for(let i = 0; i < directions.length; i++){
-                    if (mapRooms[tempRoom][directions[i]] !== null){
-                        if(mapRooms[mapRooms[tempRoom][directions[i]]]['name'].toLowerCase().includes(target)){
-                            console.log('FOUND IT', path)
-                            path.push(directions[i])
-                            q = [];
-                            return autoTrav(path, roomInfo.room_id, cooldown)
-                        }
-                        let pathCopy = [...path];
-                        pathCopy.push(directions[i])
-                        q.push(pathCopy)
-                    };  
+                if(target === 'name'){
+                    for(let i = 0; i < directions.length; i++){
+                        if (mapRooms[tempRoom][directions[i]] !== null){
+                            if(mapRooms[mapRooms[tempRoom][directions[i]]]['name_changer'] === 1){
+                                console.log('FOUND IT', path)
+                                path.push(directions[i])
+                                q = [];
+                                return autoTrav(path, roomInfo.room_id, cooldown)
+                            }
+                            let pathCopy = [...path];
+                            pathCopy.push(directions[i])
+                            q.push(pathCopy)
+                        };  
+                    };
+                } else {
+                    for(let i = 0; i < directions.length; i++){
+                        if (mapRooms[tempRoom][directions[i]] !== null){
+                            if(mapRooms[mapRooms[tempRoom][directions[i]]]['name'].toLowerCase().includes(target)){
+                                console.log('FOUND IT', path)
+                                path.push(directions[i])
+                                q = [];
+                                return autoTrav(path, roomInfo.room_id, cooldown)
+                            }
+                            let pathCopy = [...path];
+                            pathCopy.push(directions[i])
+                            q.push(pathCopy)
+                        };  
+                    };
                 };
+                
             };
         };
     };
@@ -204,7 +227,6 @@ const Game = () => {
             if(path.length > 0){
                 autoTrav(path, retArr[0], retArr[1])
             } else {
-                console.log('YOU HAVE ARIVED')
                 return 
             }
         })
@@ -235,6 +257,7 @@ const Game = () => {
                     <br/>
                     <button onClick={() => bfs('shop')}>Find Shop</button>
                     <button onClick={() => bfs('donut')}>Find Donuts</button>
+                    <button onClick={() => bfs('name')}>Find Name Changer</button>
                     <h4>available actions</h4>
                     {roomInfo.items ? 
                         roomInfo.items.length > 0 ?
@@ -284,6 +307,24 @@ const Game = () => {
                         : null
                         : null
                     }
+                    {roomInfo.title ? 
+                        roomInfo.title.toLowerCase().includes('donut') ?
+                        <button onClick={() => submitTakeDrop('buy')}>Buy Donut</button>
+                        : null : null
+                    }
+                    {roomInfo.room_id ? 
+                        mapRooms[roomInfo.room_id].name_changer === 1 ?
+                        <>
+                            <button onClick={() => submitTakeDrop('change_name')}>Change Name</button>
+                            <input 
+                                placeholder='enter new name'
+                                onChange={handleNameChange}
+                            />
+                        </>
+                        : null : null
+
+                    }
+                    
                 </div>
 
                 <div className='room-info'>
