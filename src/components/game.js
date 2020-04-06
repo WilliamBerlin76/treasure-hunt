@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
-import Map from './Map'
-import TravAlg from './initTravAlg';
+import sha256 from 'sha256';
+import Map from './Map';
+// import TravAlg from './initTravAlg';
 
 import mapRooms from '../utils/mapRooms';
 import '../styles/game.scss'
@@ -22,6 +23,8 @@ const Game = () => {
     const [inventory, setInventory] = useState({});
     const [sellItem, setSellItem] = useState({});
     const [nameChange, setNameChange] = useState({});
+    const [examine, setExamine] = useState({})
+    // const [traversing, setTraversing] = useState()
     const buyDonut = {"name": "donut", "confirm": "yes"}
 
     useEffect(() => {
@@ -93,6 +96,12 @@ const Game = () => {
             "confirm": "aye"
         })
     }
+
+    const handleExamine = e => {
+        setExamine({
+            "name": e.target.value
+        })
+    }
     const submitTakeDrop = (action) => {
         let item
         if (action === 'take'){
@@ -105,6 +114,10 @@ const Game = () => {
             item = buyDonut
         } else if (action === 'change_name'){
             item = nameChange
+        } else if (action === 'pray'){
+            item = {"pray": "pray"}
+        } else if (action === 'examine'){
+            item = examine
         }
         
         axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}`, item, config)
@@ -144,7 +157,8 @@ const Game = () => {
             })
     };
 
-    const bfs = (target) => {
+    const bfs = async (target) => {
+        // setTraversing(true)
         let q = [];
         let visited = {};
         let directions = ['n', 's', 'e', 'w'];
@@ -154,6 +168,7 @@ const Game = () => {
         }    
         
         while(q.length > 0){
+           
             let path = q.shift();
             let tempRoom = roomInfo.room_id;
             
@@ -162,10 +177,24 @@ const Game = () => {
             }
             if (!visited[tempRoom]){
                 visited[tempRoom] = tempRoom;
-                if(target === 'name'){
+                if(typeof(target) === 'number'){
                     for(let i = 0; i < directions.length; i++){
                         if (mapRooms[tempRoom][directions[i]] !== null){
-                            if(mapRooms[mapRooms[tempRoom][directions[i]]]['name_changer'] === 1){
+                            if(mapRooms[mapRooms[tempRoom][directions[i]]]['room_id'] === target){
+                                console.log('FOUND IT', path)
+                                path.push(directions[i])
+                                q = [];
+                                return autoTrav(path, roomInfo.room_id, cooldown)
+                            }
+                            let pathCopy = [...path];
+                            pathCopy.push(directions[i])
+                            q.push(pathCopy)
+                        };  
+                    };
+                } else if(target === 'name_changer' || target === 'shrine'){
+                    for(let i = 0; i < directions.length; i++){
+                        if (mapRooms[tempRoom][directions[i]] !== null){
+                            if(mapRooms[mapRooms[tempRoom][directions[i]]][target] === 1){
                                 console.log('FOUND IT', path)
                                 path.push(directions[i])
                                 q = [];
@@ -200,6 +229,7 @@ const Game = () => {
         let nextMove = path[0];
         let nextRoom = mapRooms[curId][nextMove];
         let retArr
+        // console.log(traversing)
         function x(){
             const move = new Promise((resolve) => {
                 setTimeout(async () => {
@@ -224,13 +254,74 @@ const Game = () => {
         };
         x().then(() => {
             path.shift();
+            // if(traversing === false){
+            //     return
+            // } else 
             if(path.length > 0){
                 autoTrav(path, retArr[0], retArr[1])
             } else {
                 return 
             }
         })
-    }
+    };
+
+    const mine = () => {
+        let last_proof;
+        let difficulty;
+        let retArr;
+        console.log('mining')
+        function proofOfWork(oldProof, difficulty){
+            let proof = 0;
+            while(validProof(oldProof, proof, difficulty) === false){
+                proof++
+            }
+            console.log("valid proof found")
+            return proof
+        }
+        function validProof(oldProof, newProof, difficulty){
+            let guess = encodeURI(`${oldProof}${newProof}`)
+            let guess_hash = sha256(guess);
+            // console.log(guess_hash)
+            let str = ''
+            for(let i = 0; i < difficulty; i++){
+                str = str + 0
+            }
+            return guess_hash.slice(0, 6) === str;
+        }
+
+        function y(){
+            const getLastProof = new Promise((resolve) => {
+                axios.get('https://lambda-treasure-hunt.herokuapp.com/api/bc/last_proof', config)
+                    .then(res => {
+                        last_proof = res.data.proof;
+                        difficulty = res.data.difficulty
+                        retArr = [last_proof, difficulty]
+                        resolve('done')
+                        return retArr
+                    })
+                    .catch(err => {
+                        console.log('GET LAST PROOF ERR', err)
+                    });
+            });
+            return getLastProof
+        };
+        y().then(async () => {
+            while(true){
+                let newProof = proofOfWork(retArr[0], retArr[1]);
+                console.log(newProof)
+                if(newProof){
+                    await axios.post('https://lambda-treasure-hunt.herokuapp.com/api/bc/mine/', {"proof": newProof}, config)
+                        .then(res => {
+                            console.log(res.data)
+                            return
+                        })
+                        .catch(err => {
+                            console.log('SUBMIT PROOF ERR', err)
+                        })
+                }
+            }
+        })   
+    };
 
     return (
         <>
@@ -255,9 +346,16 @@ const Game = () => {
                         )
                     })}
                     <br/>
-                    <button onClick={() => bfs('shop')}>Find Shop</button>
-                    <button onClick={() => bfs('donut')}>Find Donuts</button>
-                    <button onClick={() => bfs('name')}>Find Name Changer</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('shop')}>Find Shop</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('donut')}>Find Donuts</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('name_changer')}>Find Name Changer</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('shrine')}>Find Shrine</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('well')}>Find Wishing Well</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs(209)}>Find Mining Room</button>
+                    {/* {traversing ? 
+                        <button onClick={() => {setTraversing(false); console.log('BUTTON', traversing)}}>Stop traversal</button>   
+                        : null
+                    } */}
                     <h4>available actions</h4>
                     {roomInfo.items ? 
                         roomInfo.items.length > 0 ?
@@ -324,7 +422,13 @@ const Game = () => {
                         : null : null
 
                     }
-                    
+                    <button onClick={() => submitTakeDrop('examine')}>examine</button>
+                    <input 
+                        placeholder='enter item/player'
+                        onChange={handleExamine}
+                    />
+                    <button onClick={() => submitTakeDrop('pray')}>pray</button>
+                    <button onClick={() => mine()}>mine</button>
                 </div>
 
                 <div className='room-info'>
