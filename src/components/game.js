@@ -286,7 +286,7 @@ const Game = () => {
             for(let i = 0; i < difficulty; i++){
                 str = str + 0
             }
-            return guess_hash.slice(0, 6) === str;
+            return guess_hash.slice(0, difficulty) === str;
         }
 
         function y(){
