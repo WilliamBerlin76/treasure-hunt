@@ -23,7 +23,10 @@ const Game = () => {
     const [inventory, setInventory] = useState({});
     const [sellItem, setSellItem] = useState({});
     const [nameChange, setNameChange] = useState({});
-    const [examine, setExamine] = useState({})
+    const [examine, setExamine] = useState({});
+    const [mining, setMining] = useState();
+    const [searchId, setSearchId] = useState();
+    const [searchKeyword, setSearchKeyword] = useState();
     // const [traversing, setTraversing] = useState()
     const buyDonut = {"name": "donut", "confirm": "yes"}
 
@@ -40,7 +43,7 @@ const Game = () => {
                 axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/status',{}, config)
                     .then(res => {
                         setInventory(res.data.inventory)
-                        console.log("STATUS", res.data)
+                        // console.log("STATUS", res.data)
                     })
                     .catch(err => {
                         console.log('ERROR GETTING PLAYER STATUS', err)
@@ -101,6 +104,14 @@ const Game = () => {
         setExamine({
             "name": e.target.value
         })
+    };
+
+    const handleIdChange = e => {
+        setSearchId(parseInt(e.target.value))
+    };
+
+    const handleKeyword = e => {
+        setSearchKeyword(e.target.value)
     }
     const submitTakeDrop = (action) => {
         let item
@@ -141,7 +152,7 @@ const Game = () => {
     };
     const handleMove = (dir) => {
         let nextRoom = mapRooms[roomInfo.room_id][dir]
-        console.log(nextRoom)
+        // console.log(nextRoom)
         axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/move`, {direction: dir, next_room_id: `${nextRoom}`}, config)
             .then(res => {
                 let curRoom = res.data.room_id;
@@ -181,7 +192,7 @@ const Game = () => {
                     for(let i = 0; i < directions.length; i++){
                         if (mapRooms[tempRoom][directions[i]] !== null){
                             if(mapRooms[mapRooms[tempRoom][directions[i]]]['room_id'] === target){
-                                console.log('FOUND IT', path)
+                                // console.log('FOUND IT', path)
                                 path.push(directions[i])
                                 q = [];
                                 return autoTrav(path, roomInfo.room_id, cooldown)
@@ -195,7 +206,7 @@ const Game = () => {
                     for(let i = 0; i < directions.length; i++){
                         if (mapRooms[tempRoom][directions[i]] !== null){
                             if(mapRooms[mapRooms[tempRoom][directions[i]]][target] === 1){
-                                console.log('FOUND IT', path)
+                                // console.log('FOUND IT', path)
                                 path.push(directions[i])
                                 q = [];
                                 return autoTrav(path, roomInfo.room_id, cooldown)
@@ -209,7 +220,7 @@ const Game = () => {
                     for(let i = 0; i < directions.length; i++){
                         if (mapRooms[tempRoom][directions[i]] !== null){
                             if(mapRooms[mapRooms[tempRoom][directions[i]]]['name'].toLowerCase().includes(target)){
-                                console.log('FOUND IT', path)
+                                // console.log('FOUND IT', path)
                                 path.push(directions[i])
                                 q = [];
                                 return autoTrav(path, roomInfo.room_id, cooldown)
@@ -269,13 +280,12 @@ const Game = () => {
         let last_proof;
         let difficulty;
         let retArr;
-        console.log('mining')
         function proofOfWork(oldProof, difficulty){
             let proof = 0;
             while(validProof(oldProof, proof, difficulty) === false){
                 proof++
             }
-            console.log("valid proof found")
+            // console.log("valid proof found")
             return proof
         }
         function validProof(oldProof, newProof, difficulty){
@@ -308,16 +318,20 @@ const Game = () => {
         y().then(async () => {
             while(true){
                 let newProof = proofOfWork(retArr[0], retArr[1]);
-                console.log(newProof)
+                // console.log(newProof)
                 if(newProof){
                     await axios.post('https://lambda-treasure-hunt.herokuapp.com/api/bc/mine/', {"proof": newProof}, config)
                         .then(res => {
-                            console.log(res.data)
-                            return
+                            // console.log(res.data)
+                            setCooldown(res.data.cooldown)
+                            setRoomInfo(res.data)
+                            setMining(false)
                         })
                         .catch(err => {
                             console.log('SUBMIT PROOF ERR', err)
+                            setMining(false)
                         })
+                    break
                 }
             }
         })   
@@ -351,7 +365,19 @@ const Game = () => {
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('name_changer')}>Find Name Changer</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('shrine')}>Find Shrine</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('well')}>Find Wishing Well</button>
-                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs(209)}>Find Mining Room</button>
+                    <p>Find Room By:</p>
+                    
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs(searchId)}>Room ID</button>
+                    <input
+                        placeholder='enter room id'
+                        onChange={handleIdChange}
+                    />
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => bfs(searchKeyword)}>Keyword</button>
+                    <input
+                        placeholder='enter keyword'
+                        onChange={handleKeyword}
+                    />
+                    
                     {/* {traversing ? 
                         <button onClick={() => {setTraversing(false); console.log('BUTTON', traversing)}}>Stop traversal</button>   
                         : null
@@ -428,7 +454,8 @@ const Game = () => {
                         onChange={handleExamine}
                     />
                     <button onClick={() => submitTakeDrop('pray')}>pray</button>
-                    <button onClick={() => mine()}>mine</button>
+                    <button onClick={() => {setMining(true); mine()}}>mine</button>
+                    {mining === true ? <p>Mining...</p> : null}
                 </div>
 
                 <div className='room-info'>
