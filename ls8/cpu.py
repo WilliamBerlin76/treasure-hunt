@@ -18,6 +18,8 @@ JEQ = 0b01010101
 ST = 0b10000100
 IRET = 0b00010011
 PRA = 0b01001000
+XOR = 0b10101011
+AND = 0b10101000
 
 class CPU:
     """Main CPU class."""
@@ -42,6 +44,8 @@ class CPU:
         self.branchtable[ST] = self.handle_st
         self.branchtable[IRET] = self.handle_iret
         self.branchtable[PRA] = self.handle_pra
+        self.branchtable[XOR] = self.handle_xor
+        self.branchtable[AND] = self.handle_and
         ###########################
 
         self.reg = [0] * 8
@@ -93,6 +97,10 @@ class CPU:
                 self.FL[-1] = 0
                 self.FL[-2] = 1
                 self.FL[-3] = 0
+        elif op == 'XOR':
+            self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
+        elif op == 'AND':
+            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -141,6 +149,14 @@ class CPU:
         self.alu('ADD', argv[0], argv[1])
         self.pc += 3
     
+    def handle_xor(self, *argv):
+        self.alu('XOR', argv[0], argv[1])
+        self.pc += 3
+
+    def handle_and(self, *argv):
+        self.alu('AND', argv[0], argv[1])
+        self.pc += 3
+
     def handle_cmp(self, *argv):
         self.alu('CMP', argv[0], argv[1])
         self.pc += 3
