@@ -331,11 +331,11 @@ const Game = () => {
                 if(newProof){
                     await axios.post('https://lambda-treasure-hunt.herokuapp.com/api/bc/mine/', {"proof": newProof}, config)
                         .then(res => {
-                            // console.log(res.data)
                             setCooldown(res.data.cooldown)
                             setRoomInfo({
                                 ...roomInfo,
-                                messages: res.data.messages
+                                messages: res.data.messages,
+                                errors: res.data.errors
                             })
                             setMining(false)
                         })
@@ -445,13 +445,13 @@ const Game = () => {
                     }
                     {roomInfo.title ? 
                         roomInfo.title.toLowerCase().includes('donut') ?
-                        <button onClick={() => submitTakeDrop('buy')}>Buy Donut</button>
+                        <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('buy')}>Buy Donut</button>
                         : null : null
                     }
                     {roomInfo.room_id ? 
                         mapRooms[roomInfo.room_id].name_changer === 1 ?
                         <>
-                            <button onClick={() => submitTakeDrop('change_name')}>Change Name</button>
+                            <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('change_name')}>Change Name</button>
                             <input 
                                 placeholder='enter new name'
                                 onChange={handleNameChange}
@@ -460,13 +460,18 @@ const Game = () => {
                         : null : null
 
                     }
-                    <button onClick={() => submitTakeDrop('examine')}>examine</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('examine')}>examine</button>
                     <input 
                         placeholder='enter item/player'
                         onChange={handleExamine}
                     />
-                    <button onClick={() => submitTakeDrop('pray')}>pray</button>
-                    <button onClick={() => {setMining(true); mine()}}>mine</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('pray')}>pray</button>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => {setMining(true); mine()}}>mine</button>
+                    <span style={ {fontSize: '0.8rem'} }>Warning: clicking 'Mine' will run a proof of work algorithm, 
+                    which may take a long time to complete depending on the proof difficulty. 
+                    You will be unable to do anything else while Mining, and it may slow your browser. 
+                    Mining in the incorrect room will result in a massive cooldown penalty.
+                    </span>
                     {mining === true ? <p>Mining...</p> : null}
                 </div>
 
@@ -479,6 +484,17 @@ const Game = () => {
                             {roomInfo.messages.map((message, index) => {
                                 return (
                                     <li key={index}>{message}</li>
+                                )
+                            })}
+                        </ul>
+                        : null
+                    : null}
+                    {roomInfo.errors ?
+                        roomInfo.errors.length > 0 ? 
+                        <ul>errors:
+                            {roomInfo.errors.map((err, index) => {
+                                return (
+                                    <li key={index}>{err}</li>
                                 )
                             })}
                         </ul>
@@ -505,17 +521,7 @@ const Game = () => {
                             </p>
                         : null
                     : null}
-                    {roomInfo.errors ?
-                        roomInfo.errors.length > 0 ? 
-                        <ul>errors:
-                            {roomInfo.errors.map((err, index) => {
-                                return (
-                                    <li key={index}>{err}</li>
-                                )
-                            })}
-                        </ul>
-                        : null
-                    : null}
+                    
                 </div>
             </section>
         </>
