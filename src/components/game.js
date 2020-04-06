@@ -134,17 +134,26 @@ const Game = () => {
         axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}`, item, config)
             .then(res => {
                 setCooldown(res.data.cooldown)
-                setRoomInfo(res.data)
-                if(action === 'take'){
-                    inventory.push(item['name'])
-                } else if (action === 'drop' || action === 'sell'){
-                    for (let i = 0; i < inventory.length; i++){
-                        if (inventory[i] === item['name']){
-                            inventory.splice(i, 1)
-                            break
+                if (action !== 'examine'){
+                    setRoomInfo(res.data)
+                    if(action === 'take'){
+                        inventory.push(item['name'])
+                    } else if (action === 'drop' || action === 'sell'){
+                        for (let i = 0; i < inventory.length; i++){
+                            if (inventory[i] === item['name']){
+                                inventory.splice(i, 1)
+                                break
+                            }
                         }
                     }
+                } else if (action === 'examine'){
+                    let desc = res.data.description
+                    setRoomInfo({
+                        ...roomInfo,
+                        description: desc
+                    })
                 }
+                
             })
             .catch(err => {
                 console.log('TAKE/DROP ITEM ERR', err)
@@ -324,7 +333,10 @@ const Game = () => {
                         .then(res => {
                             // console.log(res.data)
                             setCooldown(res.data.cooldown)
-                            setRoomInfo(res.data)
+                            setRoomInfo({
+                                ...roomInfo,
+                                messages: res.data.messages
+                            })
                             setMining(false)
                         })
                         .catch(err => {
