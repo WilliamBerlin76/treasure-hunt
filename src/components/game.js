@@ -285,7 +285,7 @@ const Game = () => {
             };
         };
     };
-
+    
     const autoTrav = (path, curId, cooldown) => {
         let nextMove = path[0];
         let nextRoom = mapRooms[curId][nextMove];
@@ -389,7 +389,6 @@ const Game = () => {
             }
         })   
     };
-
     return (
         <>
             {/* <TravAlg /> */}
@@ -498,6 +497,8 @@ const Game = () => {
                     }
                     {inventory ? 
                         inventory.length > 0 ?
+                            roomInfo.title ?
+                            roomInfo.title === 'The Transmogriphier' ?
                             <div>
                                 <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('transmogrify')}>Transmogrify</button>
                                 <select name='sellItem' onChange={handleTransChange}>
@@ -509,6 +510,8 @@ const Game = () => {
                                     })}
                                 </select>
                             </div>
+                        : null
+                        : null
                         : null
                         : null
                     }

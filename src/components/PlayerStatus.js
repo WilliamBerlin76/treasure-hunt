@@ -3,8 +3,7 @@ import '../styles/playerStatus.scss'
 
 const StatusBox = props => {
     return(
-        <>
-        
+
         <section className='status-box'>
             
             <p style={ {paddingLeft:'8px'} }>name: {props.name}</p>
@@ -24,7 +23,7 @@ const StatusBox = props => {
                 onClick={props.updateStatus}
             >Update Status (1 sec cooldown)</button>
         </section>
-        </>
+       
     )
 };
 
