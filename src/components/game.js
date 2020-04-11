@@ -21,6 +21,7 @@ const Game = () => {
     const [roomInfo, setRoomInfo] = useState({});
     const [takeItem, setTakeItem] = useState({});
     const [dropItem, setDropItem] = useState({});
+    const [transItem, setTransItem] = useState({});
     const [inventory, setInventory] = useState({});
     const [sellItem, setSellItem] = useState({});
     const [nameChange, setNameChange] = useState({});
@@ -120,6 +121,11 @@ const Game = () => {
         })
     };
 
+    const handleTransChange = e => {
+        setTransItem({
+            "name": e.target.value
+        })
+    }
     const handleIdChange = e => {
         setSearchId(parseInt(e.target.value))
     };
@@ -143,16 +149,18 @@ const Game = () => {
             item = {"pray": "pray"}
         } else if (action === 'examine'){
             item = examine
+        } else if (action === 'transmogrify'){
+            item = transItem
         }
         
-        axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}`, item, config)
+        axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}/`, item, config)
             .then(res => {
                 setCooldown(res.data.cooldown)
                 if (action !== 'examine'){
                     setRoomInfo(res.data)
                     if(action === 'take'){
                         inventory.push(item['name'])
-                    } else if (action === 'drop' || action === 'sell'){
+                    } else if (action === 'drop' || action === 'sell' || action === 'transmogrify'){
                         for (let i = 0; i < inventory.length; i++){
                             if (inventory[i] === item['name']){
                                 inventory.splice(i, 1)
@@ -469,6 +477,23 @@ const Game = () => {
                         : null
                         : null
                     }
+                    {inventory ? 
+                        inventory.length > 0 ?
+                            <div>
+                                <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('transmogrify')}>Transmogrify</button>
+                                <select name='sellItem' onChange={handleTransChange}>
+                                    <option hidden=''>Select Item</option>
+                                    {inventory.map((item, index) => {
+                                        return (
+                                            <option key={index} value={item}>{item}</option>
+                                        )
+                                    })}
+                                </select>
+                            </div>
+                        : null
+                        : null
+                    }
+                    
                     {roomInfo.title ? 
                         roomInfo.title.toLowerCase().includes('donut') ?
                         <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('buy')}>Buy Donut</button>
@@ -493,8 +518,7 @@ const Game = () => {
                     />
                     <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('pray')}>pray</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => {setMining(true); mine()}}>mine</button>
-                    <span style={ {fontSize: '0.8rem'} }>Warning: clicking 'Mine' will run a proof of work algorithm, 
-                    which may take a long time to complete depending on the proof difficulty. 
+                    <span style={ {fontSize: '0.8rem'} }>Warning: It may take a long time to mine a coin. 
                     You will be unable to do anything else while Mining, and it may slow your browser. 
                     Mining in the incorrect room will result in a massive cooldown penalty.
                     </span>
