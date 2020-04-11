@@ -30,6 +30,8 @@ const Game = () => {
     const [searchId, setSearchId] = useState();
     const [searchKeyword, setSearchKeyword] = useState();
     const [playerData, setPlayerData] = useState({});
+    const [wearItem, setWearItem] = useState({});
+    const [undress, setUndress] = useState({});
     // const [traversing, setTraversing] = useState()
     const buyDonut = {"name": "donut", "confirm": "yes"}
 
@@ -125,6 +127,17 @@ const Game = () => {
         setTransItem({
             "name": e.target.value
         })
+    };
+
+    const handleWearChange = e => {
+        setWearItem({
+            "name": e.target.value
+        })
+    };
+    const handleUndressChange = e => {
+        setUndress({
+            "name": e.target.value
+        })
     }
     const handleIdChange = e => {
         setSearchId(parseInt(e.target.value))
@@ -151,12 +164,16 @@ const Game = () => {
             item = examine
         } else if (action === 'transmogrify'){
             item = transItem
+        } else if (action === 'wear'){
+            item = wearItem
+        } else if (action === 'undress'){
+            item = undress
         }
         
         axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}/`, item, config)
             .then(res => {
                 setCooldown(res.data.cooldown)
-                if (action !== 'examine'){
+                if (action !== 'examine' && action !== 'wear' && action !== 'undress'){
                     setRoomInfo(res.data)
                     if(action === 'take'){
                         inventory.push(item['name'])
@@ -168,11 +185,13 @@ const Game = () => {
                             }
                         }
                     }
-                } else if (action === 'examine'){
+                } else if (action === 'examine' || action === 'wear' || action === 'undress'){
                     let desc = res.data.description
                     setRoomInfo({
                         ...roomInfo,
-                        description: desc
+                        description: desc,
+                        messages: res.data.messages,
+                        errors: res.data.errors
                     })
                 }
                 
@@ -493,7 +512,28 @@ const Game = () => {
                         : null
                         : null
                     }
-                    
+                    {inventory ? 
+                        inventory.length > 0 ?
+                            <div>
+                                <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('wear')}>wear</button>
+                                <select name='sellItem' onChange={handleWearChange}>
+                                    <option hidden=''>Select Item</option>
+                                    {inventory.map((item, index) => {
+                                        return (
+                                            <option key={index} value={item}>{item}</option>
+                                        )
+                                    })}
+                                </select>
+                            </div>
+                        : null
+                        : null
+                    }
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('undress')}>undress</button>
+                    <input 
+                        placeholder='enter worn item'
+                        onChange={handleUndressChange}
+                    />
+                    <br />
                     {roomInfo.title ? 
                         roomInfo.title.toLowerCase().includes('donut') ?
                         <button disabled={cooldown > 0 ? true : false} onClick={() => submitTakeDrop('buy')}>Buy Donut</button>
