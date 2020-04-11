@@ -1,0 +1,9 @@
+.status-box{
+    position: fixed;
+    width: 85%;
+    display: flex;
+    justify-content: space-between;
+    bottom: 0px;
+    background:rgb(195, 195, 197);
+    z-index: 1;
+}

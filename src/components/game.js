@@ -3,6 +3,7 @@ import axios from 'axios';
 import sha256 from 'sha256';
 import Map from './Map';
 // import TravAlg from './initTravAlg';
+import StatusBox from './PlayerStatus';
 
 import mapRooms from '../utils/mapRooms';
 import '../styles/game.scss'
@@ -27,6 +28,7 @@ const Game = () => {
     const [mining, setMining] = useState();
     const [searchId, setSearchId] = useState();
     const [searchKeyword, setSearchKeyword] = useState();
+    const [playerData, setPlayerData] = useState({});
     // const [traversing, setTraversing] = useState()
     const buyDonut = {"name": "donut", "confirm": "yes"}
 
@@ -43,6 +45,7 @@ const Game = () => {
                 axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/status',{}, config)
                     .then(res => {
                         setInventory(res.data.inventory)
+                        setPlayerData(res.data)
                         // console.log("STATUS", res.data)
                     })
                     .catch(err => {
@@ -74,7 +77,18 @@ const Game = () => {
         } 
     }, [cooldown])
 
-
+    const updateStatus = () => {
+        axios.post('https://lambda-treasure-hunt.herokuapp.com/api/adv/status',{}, config)
+                    .then(res => {
+                        setInventory(res.data.inventory)
+                        setPlayerData(res.data)
+                        setCooldown(res.data.cooldown)
+                        // console.log("STATUS", res.data)
+                    })
+                    .catch(err => {
+                        console.log('ERROR GETTING PLAYER STATUS', err)
+                    })
+    }
     const handleTakeChange = e => {
         setTakeItem({
             "name": e.target.value
@@ -352,6 +366,18 @@ const Game = () => {
     return (
         <>
             {/* <TravAlg /> */}
+            <StatusBox
+                name={playerData.name}
+                abilities={playerData.abilities}
+                gold={playerData.gold}
+                speed={playerData.speed}
+                strength={playerData.strength}
+                encumbrance={playerData.encumbrance}
+                bodywear={playerData.bodywear}
+                footwear={playerData.footwear}
+                cooldown={cooldown}
+                updateStatus={updateStatus}
+            />
             <Map 
                 position={position}
             />

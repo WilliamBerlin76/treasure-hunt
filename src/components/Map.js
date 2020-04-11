@@ -3,7 +3,7 @@ import mapRooms from '../utils/mapRooms';
 import atlasImage from "../images/MapTiles.png";
 import doggo from "../images/BlitzCrop.png"
 import tiles from "../utils/tiles";
-import axios from "axios";
+
 
 const MapCanvas = props => {
     const canvas = useRef(null);
