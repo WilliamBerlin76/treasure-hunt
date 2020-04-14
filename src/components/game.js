@@ -426,7 +426,7 @@ const Game = () => {
             <section className='side-hud'>
                 <div className="display-cooldown">
                     <h3>COOLDOWN</h3>
-                    {cooldown !== NaN ? 
+                    {isNaN(cooldown) === false ? 
                         <h1>{cooldown}</h1>
                         : null
                     }  

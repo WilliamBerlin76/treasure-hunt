@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from "react";
+import React, {useRef, useEffect} from "react";
 import mapRooms from '../utils/mapRooms';
 import atlasImage from "../images/MapTiles.png";
 import doggo from "../images/BlitzCrop.png"
@@ -11,9 +11,9 @@ const MapCanvas = props => {
     const image = useRef(null);
     const spriteIm = useRef(null);
 
-    const [tileSize, setTileSize] = useState(65)
-    const [width, setWidth] = useState(24)
-    const [height, setHeight] = useState(29)
+    const tileSize = 65
+    const width = 24
+    const height = 29
    
     // console.log("position", position)
     // useEffect(() => {
