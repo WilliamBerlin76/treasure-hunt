@@ -218,6 +218,21 @@ const Game = () => {
             })
     };
 
+    const recall = () => {
+        axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/recall/`, {}, config)
+            .then(res => {
+                let curRoom = res.data.room_id;
+                setPosition({x: mapRooms[curRoom].x_coord, y: mapRooms[curRoom].y_coord})
+                setCooldown(res.data.cooldown)
+                setExits(res.data.exits)
+                setRoomInfo(res.data)
+            })
+            .catch(err => {
+                console.log('MOVE ERR', err)
+                alert('There was an error using recall, please be sure you have waited the cooldown time')
+            });
+    };
+
     const bfs = async (target) => {
         // setTraversing(true)
         let q = [];
@@ -424,6 +439,7 @@ const Game = () => {
                         )
                     })}
                     <br/>
+                    <button disabled={cooldown > 0 ? true : false} onClick={() => recall()}>Recall to Zero</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('shop')}>Find Shop</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('donut')}>Find Donuts</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('name_changer')}>Find Name Changer</button>
