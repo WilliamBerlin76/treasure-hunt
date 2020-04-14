@@ -332,20 +332,21 @@ const Game = () => {
         let retArr;
         function proofOfWork(oldProof, difficulty){
             let proof = 0;
-            while(validProof(oldProof, proof, difficulty) === false){
+            let str = ''
+            for(let i = 0; i < difficulty; i++){
+                str = str + 0
+            }
+            while(validProof(oldProof, proof, difficulty, str) === false){
                 proof++
             }
             // console.log("valid proof found")
             return proof
         }
-        function validProof(oldProof, newProof, difficulty){
+        function validProof(oldProof, newProof, difficulty, str){
             let guess = encodeURI(`${oldProof}${newProof}`)
             let guess_hash = sha256(guess);
             // console.log(guess_hash)
-            let str = ''
-            for(let i = 0; i < difficulty; i++){
-                str = str + 0
-            }
+            
             return guess_hash.slice(0, difficulty) === str;
         }
 
@@ -416,7 +417,6 @@ const Game = () => {
                     }  
                 </div>
                 <div className="actions">
-                    <h3>ACTIONS</h3>
                     <h4>available moves</h4>
                     {exits.map((dir) => {
                         return (
