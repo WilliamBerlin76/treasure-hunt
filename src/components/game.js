@@ -32,6 +32,7 @@ const Game = () => {
     const [playerData, setPlayerData] = useState({});
     const [wearItem, setWearItem] = useState({});
     const [undress, setUndress] = useState({});
+    const [flyDir, setFlyDir] = useState({})
     // const [traversing, setTraversing] = useState()
     const buyDonut = {"name": "donut", "confirm": "yes"}
 
@@ -146,6 +147,8 @@ const Game = () => {
     const handleKeyword = e => {
         setSearchKeyword(e.target.value)
     }
+    const handleFlyChange = e => setFlyDir({direction: e.target.value})
+    
     const submitTakeDrop = (action) => {
         let item
         if (action === 'take'){
@@ -168,6 +171,8 @@ const Game = () => {
             item = wearItem
         } else if (action === 'undress'){
             item = undress
+        } else if (action === 'fly'){
+            item = flyDir
         }
         
         axios.post(`https://lambda-treasure-hunt.herokuapp.com/api/adv/${action}/`, item, config)
@@ -175,7 +180,11 @@ const Game = () => {
                 setCooldown(res.data.cooldown)
                 if (action !== 'examine' && action !== 'wear' && action !== 'undress'){
                     setRoomInfo(res.data)
-                    if(action === 'take'){
+                    if(action === 'fly'){
+                        let curRoom = res.data.room_id;
+                        setPosition({x: mapRooms[curRoom].x_coord, y: mapRooms[curRoom].y_coord})
+                        setExits(res.data.exits)
+                    } else if(action === 'take'){
                         inventory.push(item['name'])
                     } else if (action === 'drop' || action === 'sell' || action === 'transmogrify'){
                         for (let i = 0; i < inventory.length; i++){
@@ -438,6 +447,16 @@ const Game = () => {
                             <button disabled={cooldown > 0 ? true : false} key={dir} className='move-buttons' onClick={() => handleMove(dir)} >{dir}</button>
                         )
                     })}
+                    {exits && roomInfo.terrain === "MOUNTAIN" ? 
+                        <>
+                            <br/>
+                            <button onClick={() => submitTakeDrop('fly')}>Fly</button>
+                            <select name='fly-select' onChange={handleFlyChange}>
+                                <option hidden=''>Select Direction</option>
+                                {exits.map((dir, index) => <option key={index} value={dir}>{dir}</option>)}
+                            </select>
+                        </>
+                    : null}
                     <br/>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => recall()}>Recall to Zero</button>
                     <button disabled={cooldown > 0 ? true : false} onClick={() => bfs('shop')}>Find Shop</button>
