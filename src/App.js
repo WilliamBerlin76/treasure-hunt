@@ -3,6 +3,7 @@ import Game from './components/game'
 import './App.scss';
 
 function App() {
+  alert('Sorry! Unfortunately the server is currently down. Please try again later!')
   return (
     <>
       <div className='title'>
